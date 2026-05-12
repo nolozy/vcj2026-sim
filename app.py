@@ -77,6 +77,26 @@ DAY1_RESULTS = {
     'B-D1-3': {'winner': 'WEC C',        'map_w': 2, 'map_l': 1, 'rnd_w': 37, 'rnd_l': 37},
 }
 
+# Day 2 結果（確定済み）
+DAY2_RESULTS = {
+    'A-D2-1': {'winner': 'REJECT',        'map_w': 2, 'map_l': 0, 'rnd_w': 26, 'rnd_l': 7},
+    'A-D2-2': {'winner': 'AGELITE',       'map_w': 2, 'map_l': 1, 'rnd_w': 35, 'rnd_l': 33},
+    'A-D2-3': {'winner': 'PARON',         'map_w': 2, 'map_l': 1, 'rnd_w': 33, 'rnd_l': 33},
+    'A-D2-4': {'winner': 'REJECT',        'map_w': 2, 'map_l': 1, 'rnd_w': 32, 'rnd_l': 29},
+    'A-D2-5': {'winner': 'REIGNITE FOXX', 'map_w': 2, 'map_l': 0, 'rnd_w': 26, 'rnd_l': 4},
+    'A-D2-6': {'winner': 'SCARZ',         'map_w': 2, 'map_l': 0, 'rnd_w': 26, 'rnd_l': 11},
+    'B-D2-1': {'winner': 'RIDDLE ORDER',  'map_w': 2, 'map_l': 0, 'rnd_w': 26, 'rnd_l': 7},
+    'B-D2-2': {'winner': 'Murash Gaming', 'map_w': 2, 'map_l': 0, 'rnd_w': 26, 'rnd_l': 21},
+    'B-D2-3': {'winner': 'Kirihana Academy', 'map_w': 2, 'map_l': 1, 'rnd_w': 29, 'rnd_l': 29},
+    'B-D2-4': {'winner': 'Murash Gaming', 'map_w': 2, 'map_l': 1, 'rnd_w': 37, 'rnd_l': 31},
+    'B-D2-5': {'winner': 'IGZIST',        'map_w': 2, 'map_l': 1, 'rnd_w': 37, 'rnd_l': 33},
+    'B-D2-6': {'winner': 'Kirihana Academy', 'map_w': 2, 'map_l': 0, 'rnd_w': 28, 'rnd_l': 22},
+}
+
+# 確定済み結果まとめ（変更不可）
+FIXED_RESULTS = {**DAY1_RESULTS, **DAY2_RESULTS}
+LOCKED_DAYS   = {1, 2}
+
 RESULTS_FILE = 'vcj2026_results.json'
 N_ADVANCE = 2
 
@@ -89,9 +109,9 @@ def load_results() -> dict:
     if os.path.exists(RESULTS_FILE):
         with open(RESULTS_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        data.update(DAY1_RESULTS)
+        data.update(FIXED_RESULTS)   # 確定済み結果は常に上書き
         return data
-    return dict(DAY1_RESULTS)
+    return dict(FIXED_RESULTS)
 
 
 def save_results(results: dict):
@@ -464,8 +484,8 @@ def main():
 
         results = load_results()
 
-        if st.button("🔄 Day1 のみにリセット", use_container_width=True):
-            save_results(dict(DAY1_RESULTS))
+        if st.button("🔄 Day1・2のみにリセット", use_container_width=True):
+            save_results(dict(FIXED_RESULTS))
             st.session_state.pop('sim_results', None)
             st.rerun()
 
@@ -519,11 +539,11 @@ print(url)
 
                 for day in [1, 2, 3]:
                     day_matches = [m for m in group_matches if m['day'] == day]
-                    is_day1 = day == 1
+                    is_locked = day in LOCKED_DAYS
 
                     with st.expander(
-                        f"Day {day}  {'（確定済み・変更不可）' if is_day1 else ''}",
-                        expanded=not is_day1
+                        f"Day {day}  {'（確定済み・変更不可）' if is_locked else ''}",
+                        expanded=not is_locked
                     ):
                         hc = st.columns([3, 2, 1.5, 1.2, 1.2])
                         hc[0].markdown("**試合**")
@@ -548,7 +568,7 @@ print(url)
                             curr_w_idx   = winner_opts.index(curr_w) if curr_w in winner_opts else 0
                             winner = cols[1].selectbox(
                                 "勝者", winner_opts, index=curr_w_idx,
-                                key=f"w_{mid}", disabled=is_day1,
+                                key=f"w_{mid}", disabled=is_locked,
                                 label_visibility='collapsed'
                             )
 
@@ -557,26 +577,26 @@ print(url)
                             curr_s_idx  = score_opts.index(curr_score) if curr_score in score_opts else 0
                             score = cols[2].selectbox(
                                 "スコア", score_opts, index=curr_s_idx,
-                                key=f"s_{mid}", disabled=is_day1,
+                                key=f"s_{mid}", disabled=is_locked,
                                 label_visibility='collapsed'
                             )
 
                             rw = cols[3].number_input(
                                 "勝RND", min_value=0, max_value=300,
                                 value=int(existing.get('rnd_w', 26)),
-                                key=f"rw_{mid}", disabled=is_day1,
+                                key=f"rw_{mid}", disabled=is_locked,
                                 label_visibility='collapsed'
                             )
                             rl = cols[4].number_input(
                                 "敗RND", min_value=0, max_value=300,
                                 value=int(existing.get('rnd_l', 0)),
-                                key=f"rl_{mid}", disabled=is_day1,
+                                key=f"rl_{mid}", disabled=is_locked,
                                 label_visibility='collapsed'
                             )
 
                             new_inputs[mid] = {
                                 'winner': winner, 'score': score,
-                                'rnd_w': rw, 'rnd_l': rl, 'is_day1': is_day1
+                                'rnd_w': rw, 'rnd_l': rl, 'is_locked': is_locked
                             }
 
             st.divider()
@@ -586,7 +606,7 @@ print(url)
 
         if submitted:
             for mid, inp in new_inputs.items():
-                if inp['is_day1']:
+                if inp['is_locked']:
                     continue
                 if inp['winner'] == '---':
                     results.pop(mid, None)
