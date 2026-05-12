@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Streamlit
+.streamlit/
+
+# 入力済み試合結果（各自のローカルデータ）
+vcj2026_results.json
+
+# OS
+.DS_Store
+Thumbs.db
